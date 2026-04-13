@@ -100,17 +100,49 @@ Penambahan 4 fitur baru:
 
 ---
 
-## 🔍 SHAP Analysis — Top 5 Faktor Penyebab Churn
+## 📊 Visualization
 
-| Rank | Feature | SHAP Value |
-|------|---------|------------|
-| 1 | `Contract` | 0.9088 |
-| 2 | `MonthlyCharges` | 0.8040 |
-| 3 | `ChargePerTenure` | 0.6682 |
-| 4 | `TechSupport` | ~0.6+ |
-| 5 | `tenure` | ~0.5+ |
+![Telco Customer Churn — XGBoost + SMOTE + Optuna + SHAP](visualisasi_customer_churn.png)
 
-> **Insight:** Jenis kontrak (`Contract`) adalah faktor paling dominan dalam prediksi churn. Pelanggan dengan kontrak bulanan (month-to-month) jauh lebih berisiko churn dibandingkan kontrak tahunan. `MonthlyCharges` yang tinggi juga berkontribusi signifikan.
+Visualisasi terdiri dari **9 panel** yang dibagi ke dalam 3 baris:
+
+### Baris 1 — Data Overview & Performance
+| Panel | Penjelasan |
+|---|---|
+| **Class Distribution (Original)** | Dataset asli sangat imbalanced: 5.174 (73.5%) No Churn vs 1.869 (26.5%) Churn. Kondisi ini berpotensi membuat model bias ke kelas mayoritas. |
+| **After SMOTE (Train Data)** | Setelah SMOTE diterapkan pada train set, distribusi menjadi seimbang: masing-masing 4.139 sample per kelas. SMOTE mensintesis data baru pada kelas minoritas secara sintetis. |
+| **Model Performance Metrics** | Ringkasan semua metrik evaluasi. AUC-ROC (0.822) berwarna biru karena ≥ 0.75, sedangkan Precision (0.541), Recall (0.690), F1-Score (0.606), dan Accuracy (0.762) berwarna merah karena masih di bawah threshold tersebut. |
+
+### Baris 2 — Model Evaluation
+| Panel | Penjelasan |
+|---|---|
+| **Confusion Matrix** | Dari 1.409 test samples: model benar memprediksi 816 No Churn (True Negative) dan 258 Churn (True Positive). Namun terdapat 219 false alarm (FP) dan 116 churn yang tidak terdeteksi (FN). Recall churn 69% menunjukkan model cukup baik menangkap pelanggan yang benar-benar churn. |
+| **ROC Curve** | Kurva ROC model (AUC = 0.822) jauh di atas garis diagonal random classifier, menunjukkan model memiliki kemampuan diskriminasi yang baik antara churn dan tidak churn. |
+| **Optuna Optimization History** | Grafik menunjukkan proses konvergensi Optuna selama 50 trials. Best AUC-ROC cross-validation mencapai **0.9321** dan sudah stabil sejak awal trial (sekitar trial ke-5), menandakan proses tuning efisien. |
+
+### Baris 3 — Feature Importance & SHAP
+| Panel | Penjelasan |
+|---|---|
+| **XGBoost Feature Importance** | Berdasarkan gain score internal XGBoost, `Contract` mendominasi dengan skor ~0.40, jauh di atas fitur lain. Diikuti `TechSupport`, `OnlineSecurity`, `InternetService`, dan `Dependents`. |
+| **SHAP Feature Importance (Mean \|SHAP Value\|)** | SHAP memberikan interpretasi yang lebih akurat secara global. `Contract` tetap teratas, diikuti `MonthlyCharges`, `ChargePerTenure` (fitur rekayasa), `TechSupport`, `TotalCharges`, dan `OnlineSecurity`. |
+| **SHAP Beeswarm Plot** | Setiap titik adalah satu data sampel. Warna merah = nilai fitur tinggi, biru = rendah. Terlihat bahwa `Contract` bernilai tinggi (merah) mendorong prediksi **tidak churn** (SHAP positif ke kanan), sedangkan nilai rendah (biru/kontrak bulanan) mendorong ke arah **churn** (kiri). Pola serupa terlihat pada `TechSupport` dan `OnlineSecurity`. |
+
+---
+
+## 🔍 SHAP Analysis — Top Faktor Penyebab Churn
+
+| Rank | Feature | Mean \|SHAP\| | Interpretasi |
+|------|---------|--------------|--------------|
+| 1 | `Contract` | ~1.0 (normalized) | Kontrak panjang → tidak churn; kontrak bulanan → churn |
+| 2 | `MonthlyCharges` | ~0.85 | Tagihan tinggi meningkatkan risiko churn |
+| 3 | `ChargePerTenure` | ~0.70 | Biaya tinggi di awal berlangganan = rentan churn |
+| 4 | `TechSupport` | ~0.55 | Tidak ada tech support → mendorong churn |
+| 5 | `TotalCharges` | ~0.50 | Akumulasi biaya berhubungan dengan durasi dan loyalitas |
+| 6 | `OnlineSecurity` | ~0.45 | Tidak ada online security → churn lebih tinggi |
+| 7 | `tenure` | ~0.40 | Tenure pendek = lebih mudah churn |
+| 8 | `InternetService` | ~0.35 | Jenis layanan internet memengaruhi keputusan churn |
+
+> **Key Insight dari Beeswarm:** Nilai `Contract` yang rendah (biru = kontrak bulanan/month-to-month) memiliki SHAP value negatif (mendorong ke prediksi churn), sementara nilai tinggi (merah = kontrak 1–2 tahun) mendorong ke prediksi tidak churn. Ini menjadi sinyal terkuat dan paling konsisten di seluruh dataset.
 
 ---
 
