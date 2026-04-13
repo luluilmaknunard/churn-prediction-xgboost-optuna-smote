@@ -102,7 +102,7 @@ Penambahan 4 fitur baru:
 
 ## 📊 Visualization
 
-![Telco Customer Churn — XGBoost + SMOTE + Optuna + SHAP](visualisasi_customer_churn.png)
+![Telco Customer Churn — XGBoost + SMOTE + Optuna + SHAP](visualisasi customer churn.png)
 
 Visualisasi terdiri dari **9 panel** yang dibagi ke dalam 3 baris:
 
